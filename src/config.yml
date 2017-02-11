@@ -1,0 +1,15 @@
+#Factions to be ignored
+DisabledFactions:
+- SafeZone
+- WarZone
+- Wilderness
+
+#Gives ranks based on current power of faction
+powerRanks:
+  1:
+  - sample.perm.power
+
+#Gives ranks based on size of faction
+populationRanks:
+  1:
+  - sample.perm.population

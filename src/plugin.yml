@@ -1,0 +1,5 @@
+author: Spearhartt
+version: '0.1'
+depend: [Vault, Factions]
+main: com.conquestiamc.PowerRanks
+name: PowerRanks
