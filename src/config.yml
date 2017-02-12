@@ -1,3 +1,6 @@
+#toggles debugging
+debug: true
+
 #Factions to be ignored
 DisabledFactions:
 - SafeZone

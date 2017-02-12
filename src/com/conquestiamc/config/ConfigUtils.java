@@ -1,15 +1,19 @@
 package com.conquestiamc.config;
 
+import com.conquestiamc.FactionLeaders;
 import com.conquestiamc.FactionRanks;
 import com.conquestiamc.PowerRanks;
+import com.conquestiamc.utils.prLogger;
+import com.massivecraft.factions.entity.Faction;
 import com.massivecraft.factions.entity.MPlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Created by Spearhartt on 2/6/2017.
@@ -20,19 +24,19 @@ public class ConfigUtils {
     public static HashMap<Integer, List<String>> populationRankPerms = new HashMap<>();
     public static FactionRanks ranks = new FactionRanks();
     public static int maxRanks = 20;
-    private static Logger log = PowerRanks.log;
+    private static prLogger log = PowerRanks.log;
     private static String label = PowerRanks.label;
 
     public void setupConfig() {
         if (config.getConfigurationSection("powerRanks").getKeys(false).size() != 0) {
-            log.info(label + "Loading Power ranks.");
+            log.debug("Loading Power ranks.");
             for (String rank : config.getConfigurationSection("powerRanks").getKeys(false)) {
                 powerRankPerms.put(Integer.parseInt(rank), config.getStringList("powerRanks." + rank));
             }
         }
 
         if (config.getConfigurationSection("populationRanks").getKeys(false).size() != 0) {
-            log.info(label + "Loading Population ranks.");
+            log.debug("Loading Population ranks.");
             for (String rank : config.getConfigurationSection("populationRanks").getKeys(false)) {
                 populationRankPerms.put(Integer.parseInt(rank), config.getStringList("populationRanks." + rank));
             }
@@ -44,7 +48,7 @@ public class ConfigUtils {
             maxRanks = powerRankPerms.size();
         }
 
-        log.info(label + "Max ranks set to: " + maxRanks);
+        log.debug("Max ranks set to: " + maxRanks);
     }
 
     /** Gets factions that are to be excluded from the power ranks */
@@ -53,29 +57,39 @@ public class ConfigUtils {
     }
 
     //Sets permissions for player
-    public static void setPermissions(MPlayer mPlayer, int oldRank) {
-        log.info(label + "====== BEGINNING PERMISSIONS SET ======");
-        removePermissions(mPlayer, oldRank);
-        addPermissions(mPlayer);
-        log.info(label + "====== ENDING OF PERMISSIONS SET ======");
+    public static void setPermissions(ArrayList<Faction> preRanking) {
+        runnablePermsCheck(preRanking);
+    }
+
+    public static void runnablePermsCheck(ArrayList<Faction> preRanking) {
+        Bukkit.getScheduler().scheduleSyncDelayedTask(PowerRanks.plugin, new Runnable() {
+            @Override
+            public void run() {
+                log.debug("====== BEGINNING PERMISSIONS SET ======");
+                for (MPlayer mPlayer : FactionLeaders.getLeaders()) {
+                    log.debug("Checking player " + mPlayer.getName());
+                    removePermissions(mPlayer, ranks.getOldRank(mPlayer.getFaction(), preRanking));
+                    addPermissions(mPlayer);
+                }
+                log.debug("====== ENDING OF PERMISSIONS SET ======");
+            }
+        }, 4L);
     }
 
     //Adds permissions for player
     public static void addPermissions(MPlayer mPlayer) {
-        log.info(label + "Adding permissions for " + mPlayer.getName());
-        for (int i = 1; i <= maxRanks; i++) {
-            log.info("i is equal to " + i);
+        for (int i = 0; i < maxRanks; i++) {
             if (!powerRankPerms.isEmpty()) {
                 if (ranks.getPower().get(i) == mPlayer.getFaction()) {
-                    log.info("Adding power perms " + powerRankPerms.get(i));
-                    addInWorlds(mPlayer, powerRankPerms.get(i));
+                    log.debug("Adding power perms " + powerRankPerms.get(i+1) + " for rank " + (i+1) + " to " + mPlayer.getName());
+                    addInWorlds(mPlayer, powerRankPerms.get(i+1));
                 }
             }
 
             if (!populationRankPerms.isEmpty()) {
                 if (ranks.getPopulation().get(i) == mPlayer.getFaction()) {
-                    log.info("Adding population perms " + populationRankPerms.get(i));
-                    addInWorlds(mPlayer, populationRankPerms.get(i));
+                    log.debug("Adding population perms " + populationRankPerms.get(i+1) + " for rank " + (i+1) + " to " + mPlayer.getName());
+                    addInWorlds(mPlayer, populationRankPerms.get(i+1));
                 }
             }
         }
@@ -100,13 +114,15 @@ public class ConfigUtils {
      * @param oldRank the old rank to use
      */
     public static void removePermissions(MPlayer mPlayer, int oldRank) {
+        oldRank++;
+        log.debug("Attempting to remove permissions for rank: " + oldRank);
         if (powerRankPerms.get(oldRank) != null) {
-            log.info(label + "Removing power permissions");
+            log.debug("Removing power permissions " + powerRankPerms.get(oldRank) + " for rank " + oldRank);
             removeInWorlds(mPlayer, powerRankPerms.get(oldRank));
         }
 
         if (populationRankPerms.get(oldRank) != null) {
-            log.info(label + "Removing population permissions");
+            log.debug("Removing population permissions " + populationRankPerms.get(oldRank) + " for rank " + oldRank);
             removeInWorlds(mPlayer, populationRankPerms.get(oldRank));
         }
     }

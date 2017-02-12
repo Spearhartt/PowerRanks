@@ -3,7 +3,6 @@ package com.conquestiamc;
 import com.conquestiamc.config.ConfigUtils;
 import com.massivecraft.factions.entity.Faction;
 import com.massivecraft.factions.entity.FactionColl;
-import com.massivecraft.factions.entity.MPlayer;
 import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
@@ -37,6 +36,7 @@ public class FactionRanks {
             Collections.sort(factions, new Comparator<Faction>() {
                 @Override
                 public int compare(Faction o1, Faction o2) {
+                    //PowerRanks.log.debug("Comparing " + o1.getName() + " " + o1.getPower() + " to " + o2.getName() + " " + o2.getPower());
                     return (int)(100 * (o2.getPower() - o1.getPower()));
                 }
             });
@@ -55,7 +55,7 @@ public class FactionRanks {
     }
 
     public static int getOldRank(Faction faction, ArrayList<Faction> oldRanking) {
-        if (oldRanking.contains(faction)) {
+        if (oldRanking != null && oldRanking.contains(faction)) {
             return oldRanking.indexOf(faction);
         } else {
             return ConfigUtils.maxRanks + 1;
